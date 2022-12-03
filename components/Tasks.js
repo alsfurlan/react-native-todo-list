@@ -1,26 +1,30 @@
-import { useState } from "react";
+import axios from "axios";
+import { useState, useEffect } from "react";
 import TaskInput from "./TaskInput";
 import TaskList from "./TaskList";
+import { addTask, toggleTaskDone, fetchTasks } from "./TaskService";
 
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
 
-  const onAddHandler = (task) => {
-    setTasks((tasks) => [
-      ...tasks,
-      { id: Date.now(), description: task, done: false },
-    ]);
+  async function loadTasks() {
+    const t = await fetchTasks();
+    setTasks(t);
+  }
+
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  const onAddHandler = async (task) => {
+    const newTask = { description: task, done: false };
+    const persistTask = await addTask(newTask);
+    setTasks((tasks) => [...tasks, persistTask]);
   };
 
   const onFinishHandler = (task) => {
-    setTasks((currentTasks) =>
-      currentTasks.map((t) => {
-        if (t.id === task.id) {
-          t.done = !t.done;
-        }
-        return t;
-      })
-    );
+    toggleTaskDone(task);
+    loadTasks();
   };
 
   return (
